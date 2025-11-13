@@ -30,10 +30,9 @@ initial_fig = visualizer.create_globe(current_year)
 # App layout
 app.layout = html.Div([
     html.Div([
-        html.H1("🌍 Interactive Carbon Emissions Globe", 
-                style={'textAlign': 'center', 'color': '#2c3e50', 'marginBottom': '20px'}),
+        html.H1("🌍 Interactive Carbon Emissions Globe"),
         html.Div([
-            html.Label("Select Year:", style={'fontSize': '18px', 'marginRight': '10px'}),
+            html.Label("Select Year:", className='slider-label'),
             dcc.Slider(
                 id='year-slider',
                 min=min([min(data['years']) for data in emissions_data.values()]),
@@ -47,46 +46,36 @@ app.layout = html.Div([
                 step=1,
                 tooltip={"placement": "bottom", "always_visible": True}
             )
-        ], style={'width': '80%', 'margin': '0 auto 20px', 'padding': '20px'}),
-    ], style={'backgroundColor': '#ecf0f1', 'padding': '20px'}),
+        ], className='controls-bar'),
+    ], className='app-header'),
     
     html.Div([
         html.Div([
             dcc.Graph(
                 id='globe-graph',
                 figure=initial_fig,
-                style={'height': '800px'},
+                className='globe-graph',
                 config={'displayModeBar': True}
             )
-        ], style={'width': '70%', 'display': 'inline-block', 'verticalAlign': 'top'}),
+        ], className='globe-section'),
         
         html.Div([
             html.Div(id='country-info', children=[
-                html.H3("Click on a country to view details", 
-                       style={'textAlign': 'center', 'color': '#7f8c8d', 'padding': '20px'})
-            ], style={
-                'backgroundColor': '#ffffff',
-                'border': '2px solid #bdc3c7',
-                'borderRadius': '10px',
-                'padding': '20px',
-                'margin': '20px',
-                'minHeight': '400px',
-                'boxShadow': '0 4px 6px rgba(0,0,0,0.1)'
-            }),
+                html.H3("Click on a country to view details", className='placeholder-text')
+            ], className='info-card'),
             
-            html.Div(id='country-trend-chart', style={'margin': '20px'})
-        ], style={'width': '28%', 'display': 'inline-block', 'verticalAlign': 'top'})
-    ]),
+            html.Div(id='country-trend-chart', className='trend-card')
+        ], className='sidebar-section')
+    ], className='content-wrapper'),
     
     html.Div([
-        html.P("Data source: Our World in Data (OWID)", 
-               style={'textAlign': 'center', 'color': '#95a5a6', 'fontSize': '14px', 'marginTop': '20px'})
-    ]),
+        html.P("Data source: Our World in Data (OWID)", className='footer-note')
+    ], className='app-footer'),
     
     # Store for clicked country
     dcc.Store(id='clicked-country-store', data=None),
     dcc.Store(id='globe-rotation-store', data={'lon': 0, 'lat': 0})
-], style={'backgroundColor': '#f8f9fa', 'minHeight': '100vh'})
+], className='app-container')
 
 
 @app.callback(
@@ -157,49 +146,49 @@ def update_globe(year, click_data, relayout_data, stored_country, stored_rotatio
 def update_country_info(country_code):
     """Update country information panel when a country is clicked."""
     if country_code is None or country_code not in emissions_data:
-        return [
-            html.H3("Click on a country to view details", 
-                   style={'textAlign': 'center', 'color': '#7f8c8d', 'padding': '20px'}),
-            None
-        ]
+        return html.H3(
+            "Click on a country to view details",
+            className='placeholder-text'
+        ), None
     
     data = emissions_data[country_code]
     
     # Create info panel
     info_panel = html.Div([
-        html.H2(data['country_name'], style={'color': '#2c3e50', 'marginBottom': '10px'}),
+        html.H2(data['country_name'], className='info-title'),
         html.Hr(),
         html.Div([
-            html.H3("Latest Data", style={'color': '#34495e', 'fontSize': '18px'}),
-            html.P(f"Year: {data['latest_year']}", style={'fontSize': '14px', 'color': '#7f8c8d'}),
+            html.H3("Latest Data", className='section-heading'),
+            html.P(f"Year: {data['latest_year']}", className='muted-text'),
             html.P([
-                html.Span(f"{data['latest_emission']:.2f}", 
-                         style={'fontSize': '32px', 'color': '#e74c3c', 'fontWeight': 'bold'}),
-                html.Span(" Million Tonnes CO₂", style={'fontSize': '16px', 'color': '#7f8c8d'})
-            ], style={'margin': '10px 0'})
-        ]),
+                html.Span(f"{data['latest_emission']:.2f}", className='metric-value'),
+                html.Span(" Million Tonnes CO₂", className='metric-suffix')
+            ], className='metric-row')
+        ], className='info-block'),
         html.Div([
-            html.H3("Trend", style={'color': '#34495e', 'fontSize': '18px'}),
-            html.P(data['trend'].capitalize(), 
-                  style={'fontSize': '20px', 
-                         'color': '#e74c3c' if data['trend'] == 'increasing' else '#27ae60',
-                         'fontWeight': 'bold'})
-        ], style={'marginTop': '20px'}),
+            html.H3("Trend", className='section-heading'),
+            html.P(
+                data['trend'].capitalize(),
+                className=f"trend-label trend-{data['trend']}"
+            )
+        ], className='info-block'),
         html.Div([
-            html.H3("Historical Range", style={'color': '#34495e', 'fontSize': '18px'}),
+            html.H3("Historical Range", className='section-heading'),
             html.P([
                 f"Maximum: {data['max_emission']:.2f} Million Tonnes",
                 html.Br(),
                 f"Minimum: {data['min_emission']:.2f} Million Tonnes"
-            ], style={'fontSize': '14px'})
-        ], style={'marginTop': '20px'}),
+            ], className='muted-text')
+        ], className='info-block'),
         html.Div([
-            html.H3("Data Coverage", style={'color': '#34495e', 'fontSize': '18px'}),
-            html.P(f"{len(data['years'])} years of data", style={'fontSize': '14px'}),
-            html.P(f"From {min(data['years'])} to {max(data['years'])}", 
-                  style={'fontSize': '12px', 'color': '#7f8c8d'})
-        ], style={'marginTop': '20px'})
-    ], style={'fontFamily': 'Arial, sans-serif'})
+            html.H3("Data Coverage", className='section-heading'),
+            html.P(f"{len(data['years'])} years of data", className='muted-text'),
+            html.P(
+                f"From {min(data['years'])} to {max(data['years'])}",
+                className='muted-subtext'
+            )
+        ], className='info-block')
+    ], className='info-panel')
     
     # Create trend chart
     trend_chart = dcc.Graph(
@@ -220,10 +209,13 @@ def update_country_info(country_code):
                 'hovermode': 'closest',
                 'plot_bgcolor': '#ffffff',
                 'paper_bgcolor': '#ffffff',
-                'height': 300
+                'height': 320,
+                'margin': dict(l=40, r=20, t=60, b=50)
             }
         },
-        config={'displayModeBar': False}
+        config={'displayModeBar': False, 'responsive': True},
+        style={'width': '100%', 'height': '100%'},
+        className='trend-graph'
     )
     
     return info_panel, trend_chart
