@@ -31,7 +31,7 @@ body {
 .controls-bar {
   width: min(900px, 100%);
   margin: 0 auto;
-  padding: 16px 20px;
+  padding: 18px 22px;
   background-color: #ffffff;
   border-radius: 12px;
   border: 1px solid #dfe4ea;
@@ -66,8 +66,8 @@ body {
 }
 
 .globe-graph {
-  height: 70vh !important;
-  min-height: 480px;
+  height: clamp(380px, 70vh, 760px) !important;
+  min-height: 420px;
 }
 
 .sidebar-section {
@@ -198,22 +198,24 @@ body {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
+    gap: 16px;
   }
 
   .info-card,
   .trend-card {
-    flex: 1 1 340px;
+    flex: 1 1 360px;
   }
 
   .globe-graph {
-    height: 65vh !important;
-    min-height: 420px;
+    height: clamp(360px, 68vh, 600px) !important;
+    min-height: 400px;
   }
 }
 
 @media (max-width: 720px) {
   .controls-bar {
     padding: 16px 14px;
+    margin: 0 auto;
   }
 
   .content-wrapper {
@@ -223,11 +225,24 @@ body {
 
   .sidebar-section {
     flex-direction: column;
+    min-width: 0;
   }
 
   .globe-graph {
-    height: 60vh !important;
+    height: clamp(360px, 72vh, 620px) !important;
     min-height: 360px;
+  }
+
+  .info-title {
+    font-size: clamp(1.2rem, 5vw, 1.6rem);
+  }
+
+  .section-heading {
+    font-size: 0.95rem;
+  }
+
+  .metric-value {
+    font-size: clamp(1.6rem, 7vw, 2.1rem);
   }
 }
 
@@ -237,7 +252,7 @@ body {
   }
 
   .globe-graph {
-    height: 52vh !important;
+    height: clamp(300px, 78vh, 560px) !important;
     min-height: 300px;
   }
 
@@ -246,8 +261,28 @@ body {
     padding: 16px;
   }
 
+  .info-panel {
+    gap: 14px;
+  }
+
+  .metric-row {
+    margin-top: 4px;
+  }
+
+  .metric-suffix {
+    font-size: 0.95rem;
+  }
+
+  .muted-text {
+    font-size: 0.9rem;
+  }
+
+  .muted-subtext {
+    font-size: 0.8rem;
+  }
+
   .trend-card .js-plotly-plot {
-    height: 280px !important;
+    height: 300px !important;
   }
 }
 
