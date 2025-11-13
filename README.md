@@ -36,11 +36,6 @@ Run the application:
 python app.py
 ```
 
-Then open your web browser and navigate to:
-```
-http://127.0.0.1:8050
-```
-
 ## Data Sources
 
 - **Annual Historical Data**: Our World in Data (OWID) - CO₂ emissions dataset
