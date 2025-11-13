@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: carbon-emissions-globe
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: python prepare_data.py && gunicorn app:server --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    autoDeploy: true
+
