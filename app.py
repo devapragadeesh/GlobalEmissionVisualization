@@ -31,9 +31,35 @@ visualizer = GlobeVisualizer(emissions_data)
 
 # Get current year for display
 current_year = visualizer.current_year
+min_year = min([min(data['years']) for data in emissions_data.values()])
 
 # Create initial globe
 initial_fig = visualizer.create_globe(current_year)
+
+
+def build_year_marks(start_year: int, end_year: int) -> dict[int, str]:
+    """Create a compact set of slider marks suitable for mobile screens."""
+    if start_year >= end_year:
+        return {start_year: str(start_year)}
+
+    anchors = {start_year, end_year}
+
+    # Add notable historical anchors if they fall within the range
+    for anchor in (1800, 1850, 1900, 1950, 2000, 2010, 2020):
+        if start_year < anchor < end_year:
+            anchors.add(anchor)
+
+    span = end_year - start_year
+    target_marks = 8
+    step = max(10, int(span / (target_marks - 1)))
+    # Round to nearest 5 for cleaner labels
+    step = ((step + 4) // 5) * 5
+
+    first_step = ((start_year + step - 1) // step) * step
+    for year in range(first_step, end_year, step):
+        anchors.add(year)
+
+    return {year: str(year) for year in sorted(anchors)}
 
 # App layout
 app.layout = html.Div([
@@ -43,14 +69,10 @@ app.layout = html.Div([
             html.Label("Select Year:", className='slider-label'),
             dcc.Slider(
                 id='year-slider',
-                min=min([min(data['years']) for data in emissions_data.values()]),
+                min=min_year,
                 max=current_year,
                 value=current_year,
-                marks={year: str(year) for year in range(
-                    min([min(data['years']) for data in emissions_data.values()]),
-                    current_year + 1,
-                    10
-                )},
+                marks=build_year_marks(min_year, current_year),
                 step=1,
                 tooltip={"placement": "bottom", "always_visible": True}
             )

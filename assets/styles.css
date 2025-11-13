@@ -38,6 +38,28 @@ body {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
 }
 
+.controls-bar .rc-slider {
+  margin-top: 12px;
+}
+
+.controls-bar .rc-slider-track {
+  background-color: #1abc9c;
+}
+
+.controls-bar .rc-slider-handle {
+  border-color: #1abc9c;
+  box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.2);
+}
+
+.controls-bar .rc-slider-mark-text {
+  font-size: 0.82rem;
+  color: #5d6d7e;
+}
+
+.controls-bar .rc-slider-dot {
+  border-color: #95a5a6;
+}
+
 .slider-label {
   display: block;
   font-size: 1.05rem;
@@ -66,8 +88,8 @@ body {
 }
 
 .globe-graph {
-  height: clamp(380px, 70vh, 760px) !important;
-  min-height: 420px;
+  height: clamp(420px, 74vh, 820px) !important;
+  min-height: 440px;
 }
 
 .sidebar-section {
@@ -207,8 +229,8 @@ body {
   }
 
   .globe-graph {
-    height: clamp(360px, 68vh, 600px) !important;
-    min-height: 400px;
+    height: clamp(380px, 78vh, 640px) !important;
+    min-height: 420px;
   }
 }
 
@@ -229,8 +251,8 @@ body {
   }
 
   .globe-graph {
-    height: clamp(360px, 72vh, 620px) !important;
-    min-height: 360px;
+    height: clamp(400px, 82vh, 700px) !important;
+    min-height: 380px;
   }
 
   .info-title {
@@ -244,6 +266,13 @@ body {
   .metric-value {
     font-size: clamp(1.6rem, 7vw, 2.1rem);
   }
+
+  .controls-bar .rc-slider-mark-text {
+    font-size: 0.65rem;
+    transform: rotate(-30deg);
+    transform-origin: top left;
+    white-space: nowrap;
+  }
 }
 
 @media (max-width: 480px) {
@@ -252,8 +281,8 @@ body {
   }
 
   .globe-graph {
-    height: clamp(300px, 78vh, 560px) !important;
-    min-height: 300px;
+    height: clamp(340px, 88vh, 680px) !important;
+    min-height: 320px;
   }
 
   .info-card,
@@ -283,6 +312,12 @@ body {
 
   .trend-card .js-plotly-plot {
     height: 300px !important;
+  }
+
+  .controls-bar .rc-slider-mark-text {
+    font-size: 0.6rem;
+    transform: rotate(-45deg);
+    transform-origin: top left;
   }
 }
 
