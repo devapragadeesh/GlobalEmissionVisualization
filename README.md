@@ -97,44 +97,6 @@ When you click a country, you'll see:
 - Export functionality for data and charts
 - Additional emission metrics (per capita, per GDP, etc.)
 
-## Deployment
-
-You can host the globe publicly using a free Python web service such as [Render](https://render.com/), GitHub as the source of truth, and Gunicorn as the production server.
-
-### 1. Push to GitHub
-
-```bash
-git init
-git add .
-git commit -m "Add carbon emissions globe"
-git branch -M main
-git remote add origin https://github.com/<your-user>/carbon-globe.git
-git push -u origin main
-```
-
-### 2. Deploy on Render (Free Web Service)
-
-1. Create a free Render account and click **New > Web Service**.
-2. Connect your GitHub repository and choose it.
-3. Render auto-detects the Python environment using `render.yaml`. If not, set:
-   - **Environment**: Python
-   - **Build command**: `pip install -r requirements.txt`
-   - **Start command**: `python prepare_data.py && gunicorn app:server --bind 0.0.0.0:$PORT --workers 2 --timeout 120`
-4. Deploy. Render will build the container, run `prepare_data.py` (downloading the latest dataset into the ephemeral `data/` directory), and start the Dash app via Gunicorn.
-5. When the service turns green, copy the public URL and share it.
-
-Render keeps the app running 24/7 on the free plan (it may sleep after inactivity but auto-resumes on the next request). To refresh the dataset, redeploy or trigger a manual restart.
-
-### Alternative Hosts
-
-- **Railway / Fly.io / Heroku**: Use the provided `Procfile` (`web: python prepare_data.py && gunicorn app:server --bind 0.0.0.0:$PORT --workers 2 --timeout 120`). Configure their dashboards to run the same start command.
-- **Vercel / Netlify**: Better suited for static or Node-based projects. They do not natively run long-lived Python Dash servers without serverless workarounds. Prefer a dedicated Python host.
-
-## Offline / Air-gapped Usage
-
-1. Connect to the internet and run `python prepare_data.py` to download the latest dataset.
-2. Copy the project (including the `data/` directory) to the offline machine.
-3. Install requirements and launch the app with `python app.py`.
 
 ## License
 
