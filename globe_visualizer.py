@@ -144,17 +144,19 @@ class GlobeVisualizer:
         fig.add_trace(go.Choropleth(
             locations=country_codes,
             z=emission_values,
-            colorscale='RdYlGn_r',  # Red-Yellow-Green reversed (high emissions = red)
+            colorscale='Turbo',
             zmin=zmin,
             zmax=zmax,
-            marker_line_color='white',
-            marker_line_width=0.5,
+            marker_line_color='rgba(255,255,255,0.45)',
+            marker_line_width=0.4,
             colorbar=dict(
                 title="CO₂ Emissions<br>(Million Tonnes)",
                 thickness=15,
                 len=0.5,
                 x=1.02,
-                tickformat=".0f"
+                tickformat=".0f",
+                bgcolor='rgba(255,255,255,0.85)',
+                outlinewidth=0
             ),
             customdata=[[name, val, code] for name, val, code in zip(country_names, emission_values, country_codes)],
             hovertemplate='<b>%{customdata[0]}</b><br>' +
@@ -171,29 +173,32 @@ class GlobeVisualizer:
                 lat=rotation.get("lat", 0)
             ),
             showocean=True,
-            oceancolor="LightBlue",
+            oceancolor="#dbeafe",
             showland=True,
-            landcolor="LightGray",
+            landcolor="#f1f5f9",
             showcountries=True,
-            countrycolor="White",
+            countrycolor="rgba(255,255,255,0.65)",
             showlakes=True,
-            lakecolor="LightBlue",
+            lakecolor="#dbeafe",
             showrivers=True,
-            rivercolor="LightBlue"
+            rivercolor="#bfdbfe"
         )
         
         fig.update_layout(
             title=dict(
                 text=f'Global CO₂ Emissions by Country ({year})',
                 x=0.5,
-                font=dict(size=24)
+                xanchor='center',
+                font=dict(size=24, color='#0f172a')
             ),
             geo=dict(
                 bgcolor='rgba(0,0,0,0)',
                 showframe=False
             ),
             height=800,
-            margin=dict(l=0, r=0, t=50, b=0)
+            margin=dict(l=0, r=0, t=60, b=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+            transition=dict(duration=450, easing='cubic-in-out')
         )
         
         return fig

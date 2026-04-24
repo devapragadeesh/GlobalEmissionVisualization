@@ -6,6 +6,7 @@ import dash
 from dash import dcc, html, Input, Output, State
 import plotly.graph_objects as go
 import json
+from dash.exceptions import PreventUpdate
 from data_fetcher import EmissionsDataFetcher
 from globe_visualizer import GlobeVisualizer
 
@@ -65,6 +66,10 @@ def build_year_marks(start_year: int, end_year: int) -> dict[int, str]:
 app.layout = html.Div([
     html.Div([
         html.H1("🌍 Interactive Carbon Emissions Globe"),
+        html.P(
+            "Explore historical CO₂ emissions by country in a real-time interactive world view",
+            className='header-subtitle'
+        ),
         html.Div([
             html.Label("Select Year:", className='slider-label'),
             dcc.Slider(
@@ -76,6 +81,30 @@ app.layout = html.Div([
                 step=1,
                 tooltip={"placement": "bottom", "always_visible": True}
             )
+        ], className='controls-bar'),
+        html.Div([
+            html.Div(id='year-pill', className='status-pill'),
+            html.Div(id='selected-country-pill', className='status-pill status-pill-secondary')
+        ], className='status-pills-row'),
+        html.Div([
+            html.Button("▶ Play timeline", id='play-button', n_clicks=0, className='action-button primary-action'),
+            html.Div([
+                html.Label("Speed", className='speed-label'),
+                dcc.Dropdown(
+                    id='play-speed-dropdown',
+                    options=[
+                        {'label': '0.5×', 'value': 0.5},
+                        {'label': '1×', 'value': 1},
+                        {'label': '2×', 'value': 2},
+                        {'label': '4×', 'value': 4},
+                    ],
+                    value=1,
+                    clearable=False,
+                    searchable=False,
+                    className='speed-dropdown'
+                )
+            ], className='speed-control-group'),
+            html.Button("🧭 Reset globe view", id='reset-view-button', n_clicks=0, className='action-button secondary-action')
         ], className='controls-bar'),
     ], className='app-header'),
     
@@ -104,25 +133,78 @@ app.layout = html.Div([
     
     # Store for clicked country
     dcc.Store(id='clicked-country-store', data=None),
-    dcc.Store(id='globe-rotation-store', data={'lon': 0, 'lat': 0})
+    dcc.Store(id='globe-rotation-store', data={'lon': 0, 'lat': 0}),
+    dcc.Interval(id='year-play-interval', interval=1200, n_intervals=0, disabled=True)
 ], className='app-container')
+
+
+@app.callback(
+    [Output('year-play-interval', 'disabled'),
+     Output('play-button', 'children')],
+    [Input('play-button', 'n_clicks')],
+    [State('year-play-interval', 'disabled')]
+)
+def toggle_timeline_playback(n_clicks, is_disabled):
+    """Toggle year slider autoplay."""
+    if not n_clicks:
+        return True, "▶ Play timeline"
+
+    should_play = is_disabled
+    return (not should_play), ("⏸ Pause timeline" if should_play else "▶ Play timeline")
+
+
+@app.callback(
+    Output('year-slider', 'value'),
+    [Input('year-play-interval', 'n_intervals')],
+    [State('year-play-interval', 'disabled'),
+     State('year-slider', 'value')]
+)
+def autoplay_year_slider(_n_intervals, is_disabled, current_value):
+    """Advance year during autoplay."""
+    if is_disabled:
+        raise PreventUpdate
+
+    if current_value is None:
+        return min_year
+
+    return min_year if current_value >= current_year else current_value + 1
+
+
+@app.callback(
+    Output('year-play-interval', 'interval'),
+    [Input('play-speed-dropdown', 'value')]
+)
+def update_timeline_speed(speed_value):
+    """Update autoplay speed based on selected multiplier."""
+    base_interval_ms = 1200
+    speed = float(speed_value or 1)
+    if speed <= 0:
+        speed = 1
+    return max(250, int(base_interval_ms / speed))
 
 
 @app.callback(
     [Output('globe-graph', 'figure'),
      Output('clicked-country-store', 'data'),
-     Output('globe-rotation-store', 'data')],
+     Output('globe-rotation-store', 'data'),
+     Output('year-pill', 'children'),
+     Output('selected-country-pill', 'children')],
     [Input('year-slider', 'value'),
      Input('globe-graph', 'clickData'),
-     Input('globe-graph', 'relayoutData')],
+     Input('globe-graph', 'relayoutData'),
+     Input('reset-view-button', 'n_clicks')],
     [State('clicked-country-store', 'data'),
      State('globe-rotation-store', 'data')]
 )
-def update_globe(year, click_data, relayout_data, stored_country, stored_rotation):
+def update_globe(year, click_data, relayout_data, _reset_clicks, stored_country, stored_rotation):
     """Update globe when year changes or country is clicked."""
+    triggered_id = dash.ctx.triggered_id
+
     # Track the globe rotation to avoid snapping back to default view
     rotation = stored_rotation or {'lon': 0, 'lat': 0}
-    if relayout_data:
+    if triggered_id == 'reset-view-button':
+        rotation = {'lon': 0, 'lat': 0}
+    elif relayout_data:
         # Handle both flattened and nested keys
         lon = (
             relayout_data.get('geo.projection.rotation.lon')
@@ -164,8 +246,18 @@ def update_globe(year, click_data, relayout_data, stored_country, stored_rotatio
                 if iso3_code == location_code:
                     clicked_country = code
                     break
-    
-    return fig, clicked_country, rotation
+
+    selected_country_name = "No country selected"
+    if clicked_country and clicked_country in emissions_data:
+        selected_country_name = emissions_data[clicked_country]['country_name']
+
+    return (
+        fig,
+        clicked_country,
+        rotation,
+        f"Year in focus: {year}",
+        f"Selected: {selected_country_name}"
+    )
 
 
 @app.callback(
@@ -228,8 +320,10 @@ def update_country_info(country_code):
                 'y': data['emissions'],
                 'type': 'scatter',
                 'mode': 'lines+markers',
-                'line': {'color': '#3498db', 'width': 3},
-                'marker': {'size': 6, 'color': '#2980b9'},
+                'line': {'color': '#6b7cff', 'width': 3, 'shape': 'spline', 'smoothing': 0.9},
+                'marker': {'size': 6, 'color': '#9a8cff', 'line': {'color': '#ffffff', 'width': 1}},
+                'fill': 'tozeroy',
+                'fillcolor': 'rgba(107, 124, 255, 0.15)',
                 'name': 'CO₂ Emissions'
             }],
             'layout': {
@@ -237,8 +331,9 @@ def update_country_info(country_code):
                 'xaxis': {'title': 'Year'},
                 'yaxis': {'title': 'Million Tonnes CO₂'},
                 'hovermode': 'closest',
-                'plot_bgcolor': '#ffffff',
-                'paper_bgcolor': '#ffffff',
+                'plot_bgcolor': 'rgba(246, 248, 255, 1)',
+                'paper_bgcolor': 'rgba(0,0,0,0)',
+                'hoverlabel': {'bgcolor': '#111827', 'font': {'color': '#f9fafb'}},
                 'height': 320,
                 'margin': dict(l=40, r=20, t=60, b=50)
             }
